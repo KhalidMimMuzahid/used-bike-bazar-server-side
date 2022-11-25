@@ -3,6 +3,7 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { application } = require("express");
 const app = express();
 const port = process.env.port || 5000;
 app.use(cors());
@@ -81,7 +82,6 @@ async function run() {
     });
     app.get("/role", async (req, res) => {
       const userUid = req.query.userUid;
-      console.log(userUid);
       const query = { userUid };
       const result = await userCollection.findOne(query);
       res.send({ role: result?.role });
@@ -165,6 +165,29 @@ async function run() {
         }
       }
       res.send({ acknowledged: false });
+    });
+    app.get("/mybuyers", async (req, res) => {
+      const email = req.query.email;
+      //   console.log(email);
+      const query = {
+        sellerEmail: email,
+      };
+      const result = await soldProductCollection.find(query).toArray();
+      //   console.log("all result", result);
+      let myBuyersEmail = [];
+      let myBuyers = [];
+      result.forEach((eachSoldInfo) => {
+        let email = eachSoldInfo?.buyerEmail;
+        if (!myBuyersEmail.includes(email)) {
+          myBuyersEmail.push(email);
+          const { buyerName, buyerEmail, buyerPhone, buyerImage } =
+            eachSoldInfo;
+          const buyerInfo = { buyerName, buyerEmail, buyerPhone, buyerImage };
+          myBuyers.push(buyerInfo);
+        }
+      });
+      //   console.log("my buyers", myBuyers);
+      res.send(myBuyers);
     });
   } finally {
   }
