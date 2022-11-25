@@ -23,6 +23,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const userCollection = client.db("users").collection("users");
+    const productCollection = client.db("products").collection("products");
 
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -74,6 +75,44 @@ async function run() {
         return res.send(result);
       }
       res.send({ acknowledged: true });
+    });
+    app.get("/role", async (req, res) => {
+      const userUid = req.query.userUid;
+      console.log(userUid);
+      const query = { userUid };
+      const result = await userCollection.findOne(query);
+      res.send({ role: result?.role });
+    });
+    app.post("/addproduct", async (req, res) => {
+      productInfo = req.body;
+      //   console.log(productInfo);
+      const result = await productCollection.insertOne(productInfo);
+      res.send(result);
+    });
+    app.get("/myproducts", async (req, res) => {
+      const email = req.query.email;
+      const query = {
+        sellerEmail: email,
+      };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.delete("/delete", async (req, res) => {
+      const _id = req.query._id;
+      const query = {
+        _id: ObjectId(_id),
+      };
+      console.log(query);
+      const result = await productCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.get("/productsdetails", async (req, res) => {
+      const _id = req.query._id;
+      const query = {
+        _id: ObjectId(_id),
+      };
+      const result = await productCollection.findOne(query);
+      res.send(result);
     });
   } finally {
   }
