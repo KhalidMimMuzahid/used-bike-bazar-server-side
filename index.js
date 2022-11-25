@@ -24,6 +24,9 @@ async function run() {
   try {
     const userCollection = client.db("users").collection("users");
     const productCollection = client.db("products").collection("products");
+    const soldProductCollection = client
+      .db("products")
+      .collection("soldProducts");
 
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -113,6 +116,55 @@ async function run() {
       };
       const result = await productCollection.findOne(query);
       res.send(result);
+    });
+    app.put("/makeadvertisement", async (req, res) => {
+      const _id = req.query._id;
+      const filter = {
+        _id: ObjectId(_id),
+      };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          isAdvertise: true,
+        },
+      };
+      const result = await productCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    app.get("/advertisedproducts", async (req, res) => {
+      const query = { isAdvertise: true, sellingStatus: "unsold" };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.post("/buyproduct", async (req, res) => {
+      const buyingInfo = req.body;
+      const post_id = buyingInfo?.post_id;
+      console.log(buyingInfo);
+      const result = await soldProductCollection.insertOne(buyingInfo);
+      if (result?.acknowledged) {
+        const filter = {
+          _id: ObjectId(post_id),
+        };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            sellingStatus: "sold",
+          },
+        };
+        const result = await productCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        if (result?.acknowledged) {
+          return res.send(result);
+        }
+      }
+      res.send({ acknowledged: false });
     });
   } finally {
   }
