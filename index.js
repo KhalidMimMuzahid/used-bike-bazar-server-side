@@ -28,6 +28,9 @@ async function run() {
     const soldProductCollection = client
       .db("products")
       .collection("soldProducts");
+    const categoriesCollection = client
+      .db("products")
+      .collection("productCategories");
 
     app.get("/jwt", async (req, res) => {
       const email = req.query.email;
@@ -239,8 +242,9 @@ async function run() {
       res.send(allSellers);
     });
     app.post("/verifyseller", async (req, res) => {
-      const userUid = req.query.userUid;
-      const filter = { userUid };
+      const sellerEmail = req.query.sellerEmail;
+      const filter = { email: sellerEmail };
+      console.log(filter);
       const options = { upsert: true };
       const updateDoc = {
         $set: {
@@ -248,6 +252,51 @@ async function run() {
         },
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
+      if (result.acknowledged) {
+        const filter1 = { sellerEmail };
+        console.log(filter1);
+        const updateDoc1 = {
+          $set: {
+            sellerVerified: true,
+          },
+        };
+        const result1 = await productCollection.updateMany(
+          filter1,
+          updateDoc1,
+          options
+        );
+
+        const result2 = await soldProductCollection.updateMany(
+          filter1,
+          updateDoc1,
+          options
+        );
+        console.log(result2);
+        return res.send(result2);
+      }
+      res.send({ message: "something wrong" });
+    });
+    app.get("/reporteditems", async (req, res) => {
+      const query = { isReported: true };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get("/catetories", async (req, res) => {
+      const result = await categoriesCollection.find({}).toArray();
+      console.log(result);
+      res.send(result);
+    });
+    app.get("/productsbycategory", async (req, res) => {
+      const categoryName = req.query.categoryName;
+      console.log(categoryName);
+      let query;
+      if (categoryName === "all") {
+        query = {};
+      } else {
+        query = { category: categoryName };
+      }
+
+      const result = await productCollection.find(query).toArray();
       console.log(result);
       res.send(result);
     });
