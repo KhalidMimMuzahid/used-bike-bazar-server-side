@@ -189,6 +189,68 @@ async function run() {
       //   console.log("my buyers", myBuyers);
       res.send(myBuyers);
     });
+    app.get("/reporttoadmin", async (req, res) => {
+      const _id = req.query._id;
+      const filter = {
+        _id: ObjectId(_id),
+      };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          isReported: true,
+        },
+      };
+      const result = await productCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+    app.get("/myorders", async (req, res) => {
+      const email = req.query.email;
+      const query = {
+        buyerEmail: email,
+      };
+      const result = await soldProductCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get("/allbuyers", async (req, res) => {
+      const query = {};
+      const result = await soldProductCollection.find(query).toArray();
+      //   console.log("all result", result);
+      let allBuyersEmail = [];
+      let allBuyers = [];
+      result.forEach((eachSoldInfo) => {
+        let email = eachSoldInfo?.buyerEmail;
+        if (!allBuyersEmail.includes(email)) {
+          allBuyersEmail.push(email);
+          const { buyerName, buyerEmail, buyerPhone, buyerImage } =
+            eachSoldInfo;
+          const buyerInfo = { buyerName, buyerEmail, buyerPhone, buyerImage };
+          allBuyers.push(buyerInfo);
+        }
+      });
+      res.send(allBuyers);
+    });
+    app.get("/allsellers", async (req, res) => {
+      const query = { role: "seller" };
+      const allSellers = await userCollection.find(query).toArray();
+      res.send(allSellers);
+    });
+    app.post("/verifyseller", async (req, res) => {
+      const userUid = req.query.userUid;
+      const filter = { userUid };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          isVerified: true,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      console.log(result);
+      res.send(result);
+    });
   } finally {
   }
 }
