@@ -70,13 +70,11 @@ async function run() {
     app.post("/user", async (req, res) => {
       const userInfo = req.body;
       const email = userInfo?.email;
-      console.log(userInfo);
       const query = {
         email,
       };
 
       const result1 = await userCollection.findOne(query);
-      console.log(result1);
       if (!result1) {
         const result = await userCollection.insertOne(userInfo);
         return res.send(result);
@@ -91,7 +89,6 @@ async function run() {
     });
     app.post("/addproduct", async (req, res) => {
       productInfo = req.body;
-      //   console.log(productInfo);
       const result = await productCollection.insertOne(productInfo);
       res.send(result);
     });
@@ -108,7 +105,6 @@ async function run() {
       const query = {
         _id: ObjectId(_id),
       };
-      console.log(query);
       const result = await productCollection.deleteOne(query);
       res.send(result);
     });
@@ -146,7 +142,6 @@ async function run() {
     app.post("/buyproduct", async (req, res) => {
       const buyingInfo = req.body;
       const post_id = buyingInfo?.post_id;
-      console.log(buyingInfo);
       const result = await soldProductCollection.insertOne(buyingInfo);
       if (result?.acknowledged) {
         const filter = {
@@ -171,12 +166,10 @@ async function run() {
     });
     app.get("/mybuyers", async (req, res) => {
       const email = req.query.email;
-      //   console.log(email);
       const query = {
         sellerEmail: email,
       };
       const result = await soldProductCollection.find(query).toArray();
-      //   console.log("all result", result);
       let myBuyersEmail = [];
       let myBuyers = [];
       result.forEach((eachSoldInfo) => {
@@ -189,7 +182,6 @@ async function run() {
           myBuyers.push(buyerInfo);
         }
       });
-      //   console.log("my buyers", myBuyers);
       res.send(myBuyers);
     });
     app.get("/reporttoadmin", async (req, res) => {
@@ -221,7 +213,6 @@ async function run() {
     app.get("/allbuyers", async (req, res) => {
       const query = {};
       const result = await soldProductCollection.find(query).toArray();
-      //   console.log("all result", result);
       let allBuyersEmail = [];
       let allBuyers = [];
       result.forEach((eachSoldInfo) => {
@@ -244,7 +235,6 @@ async function run() {
     app.post("/verifyseller", async (req, res) => {
       const sellerEmail = req.query.sellerEmail;
       const filter = { email: sellerEmail };
-      console.log(filter);
       const options = { upsert: true };
       const updateDoc = {
         $set: {
@@ -254,7 +244,6 @@ async function run() {
       const result = await userCollection.updateOne(filter, updateDoc, options);
       if (result.acknowledged) {
         const filter1 = { sellerEmail };
-        console.log(filter1);
         const updateDoc1 = {
           $set: {
             sellerVerified: true,
@@ -271,7 +260,6 @@ async function run() {
           updateDoc1,
           options
         );
-        console.log(result2);
         return res.send(result2);
       }
       res.send({ message: "something wrong" });
@@ -283,12 +271,10 @@ async function run() {
     });
     app.get("/catetories", async (req, res) => {
       const result = await categoriesCollection.find({}).toArray();
-      console.log("categories", result);
       res.send(result);
     });
     app.get("/productsbycategory", async (req, res) => {
       const categoryName = req.query.categoryName;
-      console.log(categoryName);
       let query;
       if (categoryName === "all") {
         query = {};
@@ -297,14 +283,12 @@ async function run() {
       }
 
       const result = await productCollection.find(query).toArray();
-      console.log(result);
       res.send(result);
     });
     app.get("/soldproductdetails", async (req, res) => {
       const _id = req.query._id;
       const query = { _id: ObjectId(_id) };
       const result = await soldProductCollection.findOne(query);
-      console.log(result);
       res.send(result);
     });
   } finally {
