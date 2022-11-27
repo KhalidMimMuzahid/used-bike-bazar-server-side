@@ -11,6 +11,7 @@ app.use(express.json());
 const user = process.env.DB_USER;
 const password = process.env.DB_PASSWORD;
 const uri = `mongodb+srv://${user}:${password}@cluster0.g5jzoct.mongodb.net/?retryWrites=true&w=majority`;
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 app.get("/", async (req, res) => {
   res.send("okk boss");
 });
@@ -290,6 +291,56 @@ async function run() {
       const query = { _id: ObjectId(_id) };
       const result = await soldProductCollection.findOne(query);
       res.send(result);
+    });
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = price * 100;
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: "usd",
+        amount: amount,
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+    app.post("/setpaymentstatus", async (req, res) => {
+      const query = req.query;
+      const { post_id, paymentId } = query;
+      const filter1 = {
+        post_id: post_id,
+      };
+      const filter2 = { _id: post_id };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          paymentStatus: "paid",
+          paymentId,
+        },
+      };
+      const result1 = await soldProductCollection.updateOne(
+        filter1,
+        updateDoc,
+        options
+      );
+      console.log(result1);
+      if (result1?.acknowledged) {
+        const result2 = await productCollection.updateOne(
+          filter2,
+          updateDoc,
+          options
+        );
+        if (result2?.acknowledged) {
+          return res.send(result2);
+        }
+      } else {
+        res.send({ acknowledged: false });
+      }
+
+      res.send({ status: "something wrong" });
     });
   } finally {
   }
