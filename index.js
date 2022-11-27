@@ -283,7 +283,7 @@ async function run() {
     });
     app.get("/catetories", async (req, res) => {
       const result = await categoriesCollection.find({}).toArray();
-      console.log(result);
+      console.log("categories", result);
       res.send(result);
     });
     app.get("/productsbycategory", async (req, res) => {
@@ -297,6 +297,13 @@ async function run() {
       }
 
       const result = await productCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    });
+    app.get("/soldproductdetails", async (req, res) => {
+      const _id = req.query._id;
+      const query = { _id: ObjectId(_id) };
+      const result = await soldProductCollection.findOne(query);
       console.log(result);
       res.send(result);
     });
