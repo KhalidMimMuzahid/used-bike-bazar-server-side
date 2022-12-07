@@ -88,12 +88,12 @@ async function run() {
       const result = await userCollection.findOne(query);
       res.send({ role: result?.role });
     });
-    app.post("/addproduct", async (req, res) => {
+    app.post("/addproduct", verifyJWT, async (req, res) => {
       productInfo = req.body;
       const result = await productCollection.insertOne(productInfo);
       res.send(result);
     });
-    app.get("/myproducts", async (req, res) => {
+    app.get("/myproducts", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = {
         sellerEmail: email,
@@ -165,7 +165,7 @@ async function run() {
       }
       res.send({ acknowledged: false });
     });
-    app.get("/mybuyers", async (req, res) => {
+    app.get("/mybuyers", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const query = {
         sellerEmail: email,
@@ -313,7 +313,7 @@ async function run() {
       const filter1 = {
         post_id: post_id,
       };
-      const filter2 = { _id: post_id };
+      const filter2 = { _id: ObjectId(post_id) };
       const options = { upsert: true };
       const updateDoc = {
         $set: {
